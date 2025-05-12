@@ -1,0 +1,214 @@
+# AISAP Configuration Sample
+# Based on the Agent Framework with Vertex AI Integration
+
+# API Keys - IMPORTANT: Replace with your actual API keys or use environment variables
+api_keys:
+  vertex_ai:
+    # Will use GOOGLE_APPLICATION_CREDENTIALS env variable if not specified
+    credentials_file: "/path/to/your/service-account-file.json"  # Optional: path to service account key file
+  
+  groq:
+    api_key: "YOUR_GROQ_API_KEY"  # Or use GROQ_API_KEY environment variable
+  
+  openai:
+    api_key: "YOUR_OPENAI_API_KEY"  # Or use OPENAI_API_KEY environment variable
+    organization_id: "YOUR_OPENAI_ORG_ID"  # Optional: use OPENAI_ORG_ID environment variable
+  
+  anthropic:
+    api_key: "YOUR_ANTHROPIC_API_KEY"  # Or use ANTHROPIC_API_KEY environment variable
+
+# RAG settings
+rag:
+  persist_directory: "./chroma_db"
+  embedding_model: "nomic-ai/nomic-embed-code"
+  cross_encoder_model: "cross-encoder/ms-marco-MiniLM-L-6-v2"
+  chunking_strategy: "semantic"
+  chunk_size: 500
+  chunk_overlap: 50
+  hybrid_alpha: 0.7
+  enable_query_expansion: true
+  enable_hybrid_search: true
+  enable_diversity: true
+  use_8bit: true
+
+# Google Vertex AI settings
+vertex_ai:
+  # Google Cloud Platform project ID
+  project_id: 'your-project-id-here'  # Replace with your GCP project ID
+  
+  # Google Cloud region
+  region: 'us-central1'  # Use the region where Mistral models are available
+
+  # Default model to use (if not specified per agent)
+  model_name: 'codestral-2501'  # Default to Codestral
+  
+  # Other Vertex settings
+  timeout: 120  # Timeout in seconds for API calls
+  retry_attempts: 3  # Number of retry attempts for failed calls
+
+# Context settings
+context:
+  store_type: "memory"  # Options: memory, sqlite, mongodb
+  store_path: "./context_store"
+  versioning: true
+  schema_validation: true
+
+# Workflow settings
+workflow:
+  state_storage: "memory"  # Options: memory, sqlite, redis
+  max_workflow_steps: 50
+  event_history_size: 100
+
+# Agent settings
+agents:
+  pm_agent:
+    name: "Product Manager"
+    # LLM settings
+    llm_type: "groq"  # Using Groq for PM Agent
+    model_name: "llama-3.3-70b-versatile"  # Default LLM model for Groq
+    api_key: ""  # Will use api_keys.groq.api_key or environment variable if not set
+    tools:
+      - create_requirement
+      - update_requirement
+      - list_requirements
+      - create_user_story
+      - list_user_stories
+      - create_user_stories_from_requirement
+      - prioritize_requirements
+      - create_roadmap
+      - plan_sprint
+      - generate_prd
+      - generate_prd_section
+      - analyze_requirements
+      - calculate_metrics
+  
+  dev_agent:
+    name: "Developer"
+    # Use Vertex AI for Dev Agent
+    llm_type: "vertex_ai"
+    vertex_model_name: "codestral-2501"  # Specify model for this agent
+    tools:
+      - generate_code
+      - explain_code
+      - debug_code
+      - implement_requirement
+      - analyze_code
+      - optimize_code
+      - refactor_code
+      - generate_tests
+  
+  review_agent:
+    name: "Code Reviewer"
+    llm_type: "anthropic"
+    model_name: "claude-3-opus-20240229"  # High capability model for detailed code review
+    api_key: ""  # Will use api_keys.anthropic.api_key or environment variable if not set
+    tools:
+      - review_code
+      - suggest_improvements
+      - identify_vulnerabilities
+      - check_code_style
+      - verify_test_coverage
+
+# Task-specific parameters for different LLM tasks
+llm_task_params:
+  dev_agent:
+    generate_code:
+      temperature: 0.2  # Lower temperature for more deterministic code generation
+      max_tokens: 32768
+      top_p: 0.95
+    
+    debug_code:
+      temperature: 0.3
+      max_tokens: 32768
+    
+    explain_code:
+      temperature: 0.6  # Higher for better explanations
+      max_tokens: 32768
+  
+  review_agent:
+    review_code:
+      temperature: 0.3
+      max_tokens: 16384
+    
+    identify_vulnerabilities:
+      temperature: 0.2
+      max_tokens: 8192
+
+# IDE Integration Settings
+ide:
+  websocket:
+    host: "localhost"
+    port: 8765
+    ssl_enabled: false
+    api_key: "YOUR_AISAP_LOCAL_API_KEY"  # Local API key for IDE authentication
+  
+  plugins:
+    vscode:
+      completion_delay: 300  # ms
+      suggestion_count: 5
+    
+    jetbrains:
+      completion_delay: 350  # ms
+      suggestion_count: 5
+
+# API Service Settings
+api:
+  host: "0.0.0.0"
+  port: 8000
+  enable_cors: true
+  allowed_origins:
+    - "http://localhost:3000"
+    - "https://your-frontend-domain.com"
+  authentication:
+    enabled: true
+    # JWT settings for API authentication
+    jwt_secret: "YOUR_JWT_SECRET_KEY"  # Replace with strong random value
+    token_expiry: 86400  # 24 hours in seconds
+    refresh_token_expiry: 604800  # 7 days in seconds
+
+# Project Specific Settings
+project:
+  style:
+    indentation: "spaces"
+    indent_size: 4
+    line_length: 88
+    docstrings: "google"  # Options: google, numpy, sphinx
+  
+  languages:
+    python:
+      formatter: "black"
+      linter: "flake8"
+    
+    javascript:
+      formatter: "prettier"
+      linter: "eslint"
+    
+    typescript:
+      formatter: "prettier"
+      linter: "eslint"
+
+# Security settings
+security:
+  context_access_control: false
+  audit_logging: true
+  excluded_paths:
+    - ".env"
+    - "credentials/"
+    - "secrets/"
+  token_patterns_to_mask:
+    - "api_key"
+    - "password"
+    - "secret"
+    - "token"
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 60
+
+# Logging settings
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "aisap.log"
+  rotate:
+    when: "midnight"
+    backup_count: 7
